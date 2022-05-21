@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 //const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
@@ -9,7 +9,6 @@ const app = express();
 //moddleware
 app.use(cors());
 app.use(express.json());
-
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ptgfh8c.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -31,6 +30,14 @@ async function run() {
       const cursor = manufacturerCollection.find(query);
       const tool = await cursor.toArray();
       res.send(tool);
+    });
+
+    //find user for details
+    app.get("/tools/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await manufacturerCollection.findOne(query);
+      res.send(result);
     });
   } finally {
   }
