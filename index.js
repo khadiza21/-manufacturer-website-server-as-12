@@ -41,7 +41,7 @@ async function run() {
       .db("manufacturer")
       .collection("tools");
     const orderCollection = client.db("manufacturer").collection("orders");
-    const reviewCollection = client.db("").collection("reviews");
+    const reviewCollection = client.db("manufacturer").collection("reviews");
     const userCollection = client.db("manufacturer").collection("users");
 
     const verifyAdmin = async (req, res, next) => {
@@ -85,25 +85,7 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-    // app.put("/user/admin/:email", verifyJWT, async (req, res) => {
-    //   const email = req.params.email;
-    //   const requester = req.decoded.email;
-    //   const requesterAccount = await userCollection.findOne({
-    //     email: requester,
-    //   });
-    //   if (requesterAccount.role === "admin") {
-    //     const filter = { email: email };
-    //     const updateDoc = {
-    //       $set: { role: "admin" },
-    //     };
-    //     const result = await userCollection.updateOne(filter, updateDoc);
-    //     res.send(result);
-    //   } else {
-    //     res.status(403).send({ message: "forbidden" });
-    //   }
-    // });
-
-    app.put("/user/admin/:email", verifyJWT,verifyAdmin, async (req, res) => {
+    app.put("/user/admin/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
 
       const filter = { email: email };
@@ -126,7 +108,7 @@ async function run() {
       const token = jwt.sign(
         { email: email },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "24h" }
       );
       res.send({ result, token });
     });
@@ -139,16 +121,20 @@ async function run() {
       res.send(result);
     });
 
-      //delete
-      app.delete("/tools/:id", async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: ObjectId(id) };
-        const result = await manufacturerCollection.deleteOne(query);
-        res.send(result);
-      });
-  
+    //POST
+    app.post("/tools", verifyJWT, verifyAdmin, async (req, res) => {
+      const newTools = req.body;
+      const result = await manufacturerCollection.insertOne(newTools);
+      res.send(result);
+    });
 
-
+    //delete
+    app.delete("/tools/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await manufacturerCollection.deleteOne(query);
+      res.send(result);
+    });
 
     app.get("/orders/admin", async (req, res) => {
       const query = {};
@@ -156,14 +142,6 @@ async function run() {
       const orders = await cursor.toArray();
       res.send(orders);
     });
-
-    //   app.get('/orders' , async (req, res) => {
-    //   const query = {};
-    //   const cursor = orderCollection.find(query);
-    //   const orders = await cursor.toArray();
-    //   res.send(orders);
-    // })
-
 
     // get users items
     app.get("/orders", verifyJWT, async (req, res) => {
@@ -180,30 +158,12 @@ async function run() {
       }
     });
 
-  
     //POST
     app.post("/orders", async (req, res) => {
       const newOrder = req.body;
       const result = await orderCollection.insertOne(newOrder);
       res.send(result);
     });
-
-    
-    // app.get("/orders", async (req, res) => {
-      // const decodedEmail = req.decoded.email;
-      // const email = req.query.email;
-      // const authorization = req.headers.authorization;
-      // console.log("auth header", authorization);
-      // console.log(email);
-      // if (email == decodedEmail) {
-      // const query = { email: email };
-      // const cursor = orderCollection.find(query);
-      // const myorders = await cursor.toArray();
-      // res.send(myorders);
-      // } else {
-      //   res.status(403).send({ message: "forbidden access" });
-      // }
-    // });
 
     //delete
     app.delete("/orders/:id", async (req, res) => {
