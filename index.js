@@ -55,7 +55,7 @@ async function run() {
           });
           res.send({ accessToken });
         });
-        
+
 
     //get all data of tool items
     app.get("/tools", async (req, res) => {
@@ -90,12 +90,27 @@ async function run() {
 
 
 
-    app.get("/orders", async (req, res) => {
-      const query = {};   
-      const cursor = orderCollection.find(query); 
-      const orders = await cursor.toArray();
-      res.send(orders);
-    });
+    // app.get("/orders", async (req, res) => {
+    //   const query = {};   
+    //   const cursor = orderCollection.find(query); 
+    //   const orders = await cursor.toArray();
+    //   res.send(orders);
+    // });
+
+       // get users items
+       app.get("/orders", verifyJWT, async (req, res) => {
+        const decodedEmail = req.decoded.email;
+        const email = req.query.email;
+        console.log(email);
+        if (email == decodedEmail) {
+          const query = { email: email };
+          const cursor = orderCollection.find(query);
+          const myorders = await cursor.toArray();
+          res.send(myorders);
+        } else {
+          res.status(403).send({ message: "forbidden access" });
+        }
+      });
 
 
 
