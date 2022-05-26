@@ -96,6 +96,11 @@ async function run() {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
+    app.get("/user/:email", async (req, res) => {
+     const email = req.params.email;
+     const user= await userCollection.findOne({ email: email});
+      res.send(user);
+    });
 
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -114,6 +119,27 @@ async function run() {
       const result = await userCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+
+
+    //update 
+    // app.put("/user/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const user = req.body;
+    //   const filter = {}
+    //   const options = { upsert: true}
+   
+    //   const updatedDoc = {
+    //     $set: {
+    //       quantity: updatedQuantity.quantity,
+    //     },
+    //   };
+    //   const result = await inventoryCollection.updateOne(
+    //     filter,
+    //     updatedDoc,
+    //     options
+    //   );
+    //   res.send(result);
+    // });
 
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
