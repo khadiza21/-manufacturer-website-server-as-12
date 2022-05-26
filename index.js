@@ -122,24 +122,28 @@ async function run() {
 
 
     //update 
-    // app.put("/user/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   const user = req.body;
-    //   const filter = {}
-    //   const options = { upsert: true}
-   
-    //   const updatedDoc = {
-    //     $set: {
-    //       quantity: updatedQuantity.quantity,
-    //     },
-    //   };
-    //   const result = await inventoryCollection.updateOne(
-    //     filter,
-    //     updatedDoc,
-    //     options
-    //   );
-    //   res.send(result);
-    // });
+  // user update api
+  app.put('user/:email',verifyJWT, async (req, res) => {
+    const email = req.params.email;
+    const user = req.body;
+    const filter = { email: email };
+    const options = { upsert: true };
+    const updateUser = {
+      $set: {
+     
+        edu: user.edu,
+        location: user.location,
+        phone: user.phone,
+        linkedin: user.linkedin,
+      },
+    };
+    const result = await userCollection.updateOne(
+      filter,
+      updateUser,
+      options
+    );
+    res.send(result);
+  });
 
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
