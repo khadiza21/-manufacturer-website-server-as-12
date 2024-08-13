@@ -5,7 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 //moddleware
 app.use(cors());
@@ -28,23 +28,25 @@ function verifyJWT(req, res, next) {
   });
 }
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ptgfh8c.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://bibikhadiza474:${process.env.MONGO_PASSWORD}@cluster0.g7cx4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverApi: ServerApiVersion.v1,
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
 });
 
 async function run() {
   try {
+    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    const manufacturerCollection = client
-      .db("manufacturer")
-      .collection("tools");
+    const manufacturerCollection = client.db("manufacturer").collection("tools");
     const orderCollection = client.db("manufacturer").collection("orders");
     const reviewCollection = client.db("manufacturer").collection("reviews");
     const userCollection = client.db("manufacturer").collection("users");
     const paymentCollection = client.db("manufacturer").collection("payment");
+
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -59,10 +61,10 @@ async function run() {
     };
 
 
-    app.post('/create-payment-intent', verifyJWT, async(req, res) =>{
+        app.post('/create-payment-intent', verifyJWT, async(req, res) =>{
       const service = req.body;
       const price = service?.price;
-      
+
       console.log("price",price);
       const amount = price*100;
       const paymentIntent = await stripe.paymentIntents.create({
@@ -72,7 +74,6 @@ async function run() {
       });
       res.send({clientSecret: paymentIntent.client_secret})
     });
-    
 
     // AUTH
     app.post("/login", async (req, res) => {
@@ -121,7 +122,8 @@ async function run() {
     });
 
 
-    //update 
+
+        //update
   // user update api
   app.put('user/:email',verifyJWT, async (req, res) => {
     const email = req.params.email;
@@ -130,7 +132,7 @@ async function run() {
     const options = { upsert: true };
     const updateUser = {
       $set: {
-     
+
         edu: user.edu,
         location: user.location,
         phone: user.phone,
@@ -214,7 +216,6 @@ async function run() {
       }
     });
 
-
     app.patch('/orders/:id', verifyJWT, async(req, res) =>{
       const id  = req.params.id;
       const payment = req.body;
@@ -225,7 +226,6 @@ async function run() {
           transactionId: payment.transactionId
         }
       }
-
 
       const result = await paymentCollection.insertOne(payment);
       const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
@@ -261,10 +261,16 @@ async function run() {
       const result = await reviewCollection.insertOne(newReview);
       res.send(result);
     });
+
+    console.log("connected to MongoDB!");
   } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
   }
 }
 run().catch(console.dir);
+
+
 
 app.get("/", (req, res) => {
   res.send("manufacturer server is runnuning well");
